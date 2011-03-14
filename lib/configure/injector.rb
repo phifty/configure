@@ -10,12 +10,34 @@ class Configure::Injector
   end
 
   def put_block(key, &block)
-    @configuration[key] = Configure.process_configuration @configuration_class, &block
+    value = Value.new @configuration, key
+    value.put Configure.process_configuration(@configuration_class, &block)
   end
 
   def put_arguments(key, arguments)
-    value = arguments.size == 1 ? arguments.first : arguments
-    @configuration[key] = @configuration.has_key?(key) ? [ @configuration[key], value ].flatten : value
+    value = Value.new @configuration, key
+    value.put arguments.size == 1 ? arguments.first : arguments
+  end
+
+  # Injector for a single configuration value.
+  class Value
+
+    def initialize(configuration, key)
+      @configuration, @key = configuration, key
+    end
+
+    def get
+      @configuration[@key]
+    end
+
+    def put(value)
+      @configuration[@key] = exists? ? [ get, value ].flatten : value
+    end
+
+    def exists?
+      @configuration.has_key? @key
+    end
+
   end
 
 end

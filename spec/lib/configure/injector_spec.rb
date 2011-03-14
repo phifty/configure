@@ -31,6 +31,12 @@ describe Configure::Injector do
       @injector.configuration[:test_key].should == :nested_configuration
     end
 
+    it "should combine nested configurations to an array" do
+      @injector.put_block :test_key, &@block
+      @injector.put_block :test_key, &@block
+      @injector.configuration[:test_key].should == [ :nested_configuration, :nested_configuration ]
+    end
+
   end
 
   describe "put_arguments" do

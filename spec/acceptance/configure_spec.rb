@@ -47,6 +47,24 @@ describe Configure do
       }
     end
 
+    it "should combine nested configurations to an array" do
+      configuration = described_class.process do
+        test_key do
+          nested_test_key "one"
+        end
+        test_key do
+          nested_test_key "two"
+        end
+      end
+
+      configuration.should == {
+        :test_key => [
+          { :nested_test_key => "one" },
+          { :nested_test_key => "two" }
+        ]
+      }
+    end
+
   end
 
 end
