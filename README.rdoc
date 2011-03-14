@@ -4,6 +4,43 @@
 Configure offers an easy way for configure your application using a DSL. It provides a single-method interface that
 receives a block and returns well-structured configuration values.
 
+== Usage
+
+The most simple way <tt>configure</tt> can be used is to pass a block to the <tt>Configure.process</tt> method and
+receive back a hash with the configuration values.
+
+  laser = Configure.process do
+    title "red laser"
+    wave_length 700
+  end
+
+  laser == {
+    :title => "red laser",
+    :wave_length => 700
+  } # => true
+
+It is also possible to pass blocks to configuration keys and combine multiple values to an array.
+
+  laser = Configure.process do
+    title "red and violet pulse laser"
+    pulses do
+      wave_length 700
+      duration 20
+    end
+    pulses do
+      wave_length 400
+      duration 20
+    end
+  end
+
+  laser == {
+    :title => "red and violet pulse laser",
+    :pulses => [
+      { :wave_length => 700, :duration => 20 },
+      { :wave_length => 400, :duration => 20 }
+    ]
+  } # => true
+
 == Development
 
 Development has been done test-driven and the code follows at most the Clean Code paradigms. Code smells has been
