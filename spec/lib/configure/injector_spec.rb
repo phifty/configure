@@ -18,23 +18,35 @@ describe Configure::Injector do
 
     before :each do
       @block = Proc.new { }
-      Configure.stub(:process_configuration => :nested_configuration)
+      @arguments = [ "one" ]
+      @nested_configuration = { }
+      Configure.stub(:process_configuration => @nested_configuration)
     end
 
-    it "should process a newly created configuration" do
-      Configure.should_receive(:process_configuration).with(Hash, &@block)
-      @injector.put_block :test_key, &@block
+    it "should process a new (nested) configuration" do
+      Configure.should_receive(:process_configuration).with(Hash, &@block).and_return(@nested_configuration)
+      @injector.put_block :test_key, @arguments, &@block
     end
 
     it "should nest the configuration" do
-      @injector.put_block :test_key, &@block
-      @injector.configuration[:test_key].should == :nested_configuration
+      @injector.put_block :test_key, @arguments, &@block
+      @injector.configuration[:test_key].should == @nested_configuration
+    end
+
+    it "should set the :arguments key in the nested configuration" do
+      @injector.put_block :test_key, @arguments, &@block
+      @nested_configuration[:arguments].should == @arguments
+    end
+
+    it "should not set the :arguments key in the nested configuration if no arguments are given" do
+      @injector.put_block :test_key, [ ], &@block
+      @nested_configuration.should_not have_key(:arguments)
     end
 
     it "should combine nested configurations to an array" do
-      @injector.put_block :test_key, &@block
-      @injector.put_block :test_key, &@block
-      @injector.configuration[:test_key].should == [ :nested_configuration, :nested_configuration ]
+      @injector.put_block :test_key, @arguments, &@block
+      @injector.put_block :test_key, @arguments, &@block
+      @injector.configuration[:test_key].should == [ @nested_configuration, @nested_configuration ]
     end
 
   end

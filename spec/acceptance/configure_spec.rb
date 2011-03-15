@@ -65,6 +65,18 @@ describe Configure do
       }
     end
 
+    it "should set the :arguments key in nested configurations with the passed arguments" do
+      configuration = described_class.process do
+        test_key "one", "two" do
+          nested_test_key "three"
+        end
+      end
+
+      configuration.should == {
+        :test_key => { :arguments => [ "one", "two" ], :nested_test_key => "three" }
+      }
+    end
+
   end
 
 end

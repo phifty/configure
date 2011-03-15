@@ -8,7 +8,7 @@ class Configure::Sandbox
 
    def method_missing(method_name, *arguments, &block)
      if block_given?
-       @injector.put_block method_name, &block
+       @injector.put_block method_name, arguments, &block
      else
        @injector.put_arguments method_name, arguments
      end

@@ -14,8 +14,8 @@ describe Configure::Sandbox do
 
   it "should pass method calls with a block to the injector's :put_block" do
     block = Proc.new { }
-    @injector.should_receive(:put_block).with(:test_key, &block)
-    @sandbox.test_key &block
+    @injector.should_receive(:put_block).with(:test_key, [ "one" ], &block)
+    @sandbox.test_key "one", &block
   end
 
 end

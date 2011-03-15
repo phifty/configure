@@ -9,14 +9,24 @@ class Configure::Injector
     @configuration = @configuration_class.new
   end
 
-  def put_block(key, &block)
+  def put_block(key, arguments, &block)
+    nested_configuration = Configure.process_configuration @configuration_class, &block
+    self.class.put_nested_arguments nested_configuration, arguments
     value = Value.new @configuration, key
-    value.put Configure.process_configuration(@configuration_class, &block)
+    value.put nested_configuration
   end
 
   def put_arguments(key, arguments)
     value = Value.new @configuration, key
-    value.put arguments.size == 1 ? arguments.first : arguments
+    value.put_single_or_multiple arguments
+  end
+
+  private
+
+  def self.put_nested_arguments(nested_configuration, arguments)
+    return if arguments.empty?
+    arguments_value = Value.new nested_configuration, :arguments
+    arguments_value.put arguments
   end
 
   # Injector for a single configuration value.
@@ -32,6 +42,10 @@ class Configure::Injector
 
     def put(value)
       @configuration[@key] = exists? ? [ get, value ].flatten : value
+    end
+
+    def put_single_or_multiple(values)
+      self.put values.size == 1 ? values.first : values
     end
 
     def exists?
