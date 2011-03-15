@@ -3,6 +3,7 @@ module Configure
 
   autoload :Injector, File.join(File.dirname(__FILE__), "configure", "injector")
   autoload :Sandbox, File.join(File.dirname(__FILE__), "configure", "sandbox")
+  autoload :Schema, File.join(File.dirname(__FILE__), "configure", "schema")
 
   def self.process(schema = { }, &block)
     process_configuration schema, &block
