@@ -5,10 +5,17 @@ describe Configure::Injector do
   before :each do
     @configuration_class = Class.new
     @configuration_class.send :attr_accessor, :test_key
+    @configuration_class.send :attr_accessor, :another_test_key
+
     @nested_schema = { }
     @schema = {
       :configuration_class => @configuration_class,
-      :test_key => @nested_schema
+      :nested => {
+        :test_key => @nested_schema
+      },
+      :defaults => {
+        :another_test_key => "default value"
+      }
     }
     @injector = described_class.new @schema
   end
@@ -16,7 +23,13 @@ describe Configure::Injector do
   describe "initialize" do
 
     it "should create a configuration" do
-      @injector.configuration.should be_instance_of(@schema[:configuration_class])
+      configuration = @injector.configuration
+      configuration.should be_instance_of(@schema[:configuration_class])
+    end
+
+    it "should set the default values" do
+      configuration = @injector.configuration
+      configuration.another_test_key.should == "default value"
     end
 
   end
@@ -42,7 +55,7 @@ describe Configure::Injector do
 
     it "should set the :arguments key in the nested configuration" do
       @injector.put_block :test_key, @arguments, &@block
-      @nested_configuration[:arguments].should == @arguments
+      @injector.configuration.test_key[:arguments].should == @arguments
     end
 
     it "should not set the :arguments key in the nested configuration if no arguments are given" do
@@ -63,6 +76,11 @@ describe Configure::Injector do
     it "should assign a value" do
       @injector.put_arguments :test_key, [ "one" ]
       @injector.configuration.test_key.should == "one"
+    end
+
+    it "should override a value" do
+      @injector.put_arguments :another_test_key, [ "one" ]
+      @injector.configuration.another_test_key.should == "one"
     end
 
     it "should assign an array of values" do

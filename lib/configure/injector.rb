@@ -9,29 +9,43 @@ class Configure::Injector
 
   def initialize(schema)
     @schema = schema
+    @configuration = self.configuration_class.new
   end
 
   def configuration_class
     @schema[:configuration_class] || Hash
   end
 
-  def configuration
-    @configuration ||= self.configuration_class.new
+  def defaults
+    @schema[:defaults] || { }
   end
 
   def put_block(key, arguments, &block)
-    nested_configuration = Configure.process_configuration self.schema[key] || { }, &block
+    nested_schema = (self.schema[:nested] || { })[key] || { }
+    nested_configuration = Configure.process_configuration nested_schema, &block
     self.class.put_nested_arguments nested_configuration, arguments
-    value = Value.new self.configuration, key
+    value = Value.new @configuration, key
     value.put_or_combine nested_configuration
   end
 
   def put_arguments(key, arguments)
-    value = Value.new self.configuration, key
+    value = Value.new @configuration, key
     value.put_single_or_multiple arguments
   end
 
+  def configuration
+    apply_defaults
+    @configuration
+  end
+
   private
+
+  def apply_defaults
+    self.defaults.each do |key, default_value|
+      value = Value.new @configuration, key
+      value.put_if_nil default_value
+    end
+  end
 
   def self.put_nested_arguments(nested_configuration, arguments)
     return if arguments.empty?
@@ -52,6 +66,10 @@ class Configure::Injector
 
     def put_or_combine(value)
       self.put exists? ? [ get, value ].flatten : value
+    end
+
+    def put_if_nil(value)
+      self.put value if get.nil?
     end
 
     def put(value)
