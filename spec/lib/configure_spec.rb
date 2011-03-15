@@ -13,8 +13,8 @@ describe Configure do
     end
 
     it "should call :process_configuration" do
-      described_class.should_receive(:process_configuration).with(Hash, &@block)
-      described_class.process &@block
+      described_class.should_receive(:process_configuration).with(:schema, &@block)
+      described_class.process :schema, &@block
     end
 
   end
@@ -30,22 +30,22 @@ describe Configure do
     end
 
     it "should initialize the injector" do
-      described_class::Injector.should_receive(:new).with(Hash).and_return(@injector)
-      described_class.process_configuration Hash, &@block
+      described_class::Injector.should_receive(:new).with(:schema).and_return(@injector)
+      described_class.process_configuration :schema, &@block
     end
 
     it "should initialize the sandbox" do
       described_class::Sandbox.should_receive(:new).with(@injector).and_return(@sandbox)
-      described_class.process_configuration Hash, &@block
+      described_class.process_configuration :schema, &@block
     end
 
     it "should evaluate the block in the sandbox" do
       @sandbox.should_receive(:instance_eval).with(&@block)
-      described_class.process_configuration Hash, &@block
+      described_class.process_configuration :schema, &@block
     end
 
     it "should return the configuration" do
-      configuration = described_class.process_configuration Hash, &@block
+      configuration = described_class.process_configuration :schema, &@block
       configuration.should == :configuration
     end
 

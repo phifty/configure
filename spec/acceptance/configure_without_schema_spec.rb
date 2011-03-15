@@ -2,7 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), "..", "spec_helper"))
 
 describe Configure do
 
-  describe "process" do
+  describe "process without schema" do
 
     it "should turn method call into hash values" do
       configuration = described_class.process do

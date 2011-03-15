@@ -3,13 +3,20 @@ require File.expand_path(File.join(File.dirname(__FILE__), "..", "..", "spec_hel
 describe Configure::Injector do
 
   before :each do
-    @injector = described_class.new Hash
+    @configuration_class = Class.new
+    @configuration_class.send :attr_accessor, :test_key
+    @nested_schema = { }
+    @schema = {
+      :configuration_class => @configuration_class,
+      :test_key => @nested_schema
+    }
+    @injector = described_class.new @schema
   end
 
   describe "initialize" do
 
     it "should create a configuration" do
-      @injector.configuration.should be_instance_of(Hash)
+      @injector.configuration.should be_instance_of(@schema[:configuration_class])
     end
 
   end
@@ -24,13 +31,13 @@ describe Configure::Injector do
     end
 
     it "should process a new (nested) configuration" do
-      Configure.should_receive(:process_configuration).with(Hash, &@block).and_return(@nested_configuration)
+      Configure.should_receive(:process_configuration).with(@nested_schema, &@block).and_return(@nested_configuration)
       @injector.put_block :test_key, @arguments, &@block
     end
 
     it "should nest the configuration" do
       @injector.put_block :test_key, @arguments, &@block
-      @injector.configuration[:test_key].should == @nested_configuration
+      @injector.configuration.test_key.should == @nested_configuration
     end
 
     it "should set the :arguments key in the nested configuration" do
@@ -46,7 +53,7 @@ describe Configure::Injector do
     it "should combine nested configurations to an array" do
       @injector.put_block :test_key, @arguments, &@block
       @injector.put_block :test_key, @arguments, &@block
-      @injector.configuration[:test_key].should == [ @nested_configuration, @nested_configuration ]
+      @injector.configuration.test_key.should == [ @nested_configuration, @nested_configuration ]
     end
 
   end
@@ -55,18 +62,37 @@ describe Configure::Injector do
 
     it "should assign a value" do
       @injector.put_arguments :test_key, [ "one" ]
-      @injector.configuration[:test_key].should == "one"
+      @injector.configuration.test_key.should == "one"
     end
 
     it "should assign an array of values" do
       @injector.put_arguments :test_key, [ "one", "two" ]
-      @injector.configuration[:test_key].should == [ "one", "two" ]
+      @injector.configuration.test_key.should == [ "one", "two" ]
     end
 
     it "should combine existing with new values" do
       @injector.put_arguments :test_key, [ "one" ]
       @injector.put_arguments :test_key, [ "two" ]
-      @injector.configuration[:test_key].should == [ "one", "two" ]
+      @injector.configuration.test_key.should == [ "one", "two" ]
+    end
+
+    it "should raise a #{described_class::Error} if key can't be set" do
+      lambda do
+        @injector.put_arguments :invalid_key, [ "one" ]
+      end.should raise_error(described_class::Error)
+    end
+
+  end
+
+  describe "configuration" do
+
+    before :each do
+      @injector.put_arguments :test_key, [ "one" ]
+    end
+
+    it "should return an instance of :configuration_class" do
+      configuration = @injector.configuration
+      configuration.should be_instance_of(@schema[:configuration_class])
     end
 
   end
