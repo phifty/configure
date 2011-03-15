@@ -10,36 +10,161 @@ The most simple way <tt>configure</tt> can be used is to pass a block to the <tt
 receive back a hash with the configuration values.
 
   laser = Configure.process do
-    title "red laser"
+    label "red laser"
     wave_length 700
   end
 
   laser == {
-    :title => "red laser",
+    :label => "red laser",
     :wave_length => 700
   } # => true
+
+=== Nested configurations
 
 It is also possible to pass blocks to configuration keys and combine multiple values to an array.
 
   laser = Configure.process do
-    title "red and violet pulse laser"
-    pulses do
+    label "red and violet pulse laser"
+    pulse do
       wave_length 700
       duration 20
     end
-    pulses do
+    pulse do
       wave_length 400
       duration 20
     end
   end
 
   laser == {
-    :title => "red and violet pulse laser",
-    :pulses => [
+    :label => "red and violet pulse laser",
+    :pulse => [
       { :wave_length => 700, :duration => 20 },
       { :wave_length => 400, :duration => 20 }
     ]
   } # => true
+
+If arguments and a block is passed to a configuration key, the arguments are stored at the <tt>:arguments</tt> key
+inside the nested configuration.
+
+  laser = Configure.process do
+    label "red pulse laser"
+    pulse "test" do
+      wave_length 700
+      duration 20
+    end
+  end
+
+  laser = {
+    :label => "red pulse laser",
+    :pulse => {
+      :wave_length => 700,
+      :duration => 20,
+      :arguments => [ "test" ]
+    }
+
+  } # => true
+
+== Schema
+
+In order receive a more structured configuration, a schema can be passed to the <tt>Configure.process</tt> method. This
+schema is a simple hash, that can be created - off course - using the configure syntax ;-)
+
+=== Defaults
+
+  schema = Configure::Schema.build do
+    defaults do
+      wave_length 700
+      duration 20
+    end
+  end
+
+  laser = Configure.process schema do
+    label "violet pulse laser"
+    wave_length 400
+  end
+
+  laser = {
+    :label => "violet pulse laser",
+    :wave_length => 400,
+    :duration => 20
+  } # => true
+
+=== Nested schemas
+
+Nested schema have to go to the <tt>nested</tt> section.
+
+  schema = Configure::Schema.build do
+    nested do
+      pulse do
+        defaults do
+          wave_length 700
+          duration 20
+        end
+      end
+    end
+  end
+
+If a nested schema provides the key <tt>argument_keys</tt>, the arguments that have been passed along with the nested
+configuration, are stored to these keys. The rest will be assigned to the <tt>:arguments</tt> key as before.
+
+  schema = Configure::Schema.build do
+    nested do
+      pulse do
+        argument_keys :wave_length, :duration
+      end
+    end
+  end
+
+  laser = Configure.process schema do
+    pulse 700, 20, :extra do
+      label "red pulse"
+    end
+  end
+
+  laser == {
+    :pulse => {
+      :wave_length => 700,
+      :duration => 20,
+      :arguments => [ :extra ]
+      :label => "red pulse"
+    }
+  } # => true
+
+=== Configuration class
+
+Sometimes, a hash may not be the best data structure to store the configuration. If a more strict structure is needed,
+the attribute <tt>:configuration_class</tt> can be set the schema. When the configuration is processed, the class is
+instantiated and the values are set via <tt>key=</tt> or the <tt>[]=</tt> methods. If both is not possible, an exception
+is raised.
+
+  class Laser
+
+    attr_accessor :label
+    attr_accessor :wave_length
+    attr_accessor :duration
+
+  end
+
+  schema = Configure::Schema.build do
+    configuration_class Laser
+    defaults do
+      duration 20
+    end
+  end
+
+  laser = Configure.process schema do
+    label "red laser"
+    wave_length 700
+  end
+
+  laser.is_a? Laser          # => true
+  laser.label == "red laser" # => true
+  laser.wave_length == 700   # => true
+  laser.duration == 20       # => true
+
+  Configure.process schema do
+    invalid_key "value"
+  end # => raises Configure::Injector::Error
 
 == Development
 
