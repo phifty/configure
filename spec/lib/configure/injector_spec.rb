@@ -60,7 +60,13 @@ describe Configure::Injector do
 
     it "should not set the :arguments key in the nested configuration if no arguments are given" do
       @injector.put_block :test_key, [ ], &@block
-      @nested_configuration.should_not have_key(:arguments)
+      @injector.configuration.test_key.should_not have_key(:arguments)
+    end
+
+    it "should set the :argument_keys with the argument values if specified" do
+      @injector.schema[:nested][:test_key][:argument_keys] = :another_test_key
+      @injector.put_block :test_key, @arguments, &@block
+      @injector.configuration.test_key[:another_test_key].should == "one"
     end
 
     it "should combine nested configurations to an array" do

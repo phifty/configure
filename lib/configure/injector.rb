@@ -23,7 +23,7 @@ class Configure::Injector
   def put_block(key, arguments, &block)
     nested_schema = (self.schema[:nested] || { })[key] || { }
     nested_configuration = Configure.process_configuration nested_schema, &block
-    self.class.put_nested_arguments nested_configuration, arguments
+    Arguments.new(nested_schema, nested_configuration, arguments).put
     value = Value.new @configuration, key
     value.put_or_combine nested_configuration
   end
@@ -47,10 +47,33 @@ class Configure::Injector
     end
   end
 
-  def self.put_nested_arguments(nested_configuration, arguments)
-    return if arguments.empty?
-    arguments_value = Value.new nested_configuration, :arguments
-    arguments_value.put_or_combine arguments
+  # Injector for the arguments in a nested configuration.
+  class Arguments
+
+    def initialize(schema, configuration, arguments)
+      @schema, @configuration, @arguments = schema, configuration, arguments.dup
+    end
+
+    def put
+      put_to_specified_keys
+      put_to_argument_key
+    end
+
+    def put_to_specified_keys
+      return if @arguments.empty?
+      argument_keys = [ @schema[:argument_keys] ].flatten.compact
+      argument_keys.each do |argument_key|
+        arguments_value = Value.new @configuration, argument_key
+        arguments_value.put @arguments.shift
+      end
+    end
+
+    def put_to_argument_key
+      return if @arguments.empty?
+      arguments_value = Value.new @configuration, :arguments
+      arguments_value.put @arguments
+    end
+
   end
 
   # Injector for a single configuration value.

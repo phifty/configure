@@ -17,8 +17,9 @@ describe Configure do
         end
         nested do
           test_key_two do
+            argument_keys :test_key_three, :test_key_four
             defaults do
-              test_key_three "default value"
+              test_key_five "default value"
             end
           end
         end
@@ -57,7 +58,36 @@ describe Configure do
       end
 
       configuration.test_key_two.should == {
-        :test_key_three => "default value"
+        :test_key_five => "default value"
+      }
+    end
+
+    it "should transfer the arguments to a nested configuration to the specified argument_keys" do
+      configuration = described_class.process @schema do
+        test_key_two "three", "four" do
+          test_key_five "five"
+        end
+      end
+
+      configuration.test_key_two.should == {
+        :test_key_three => "three",
+        :test_key_four => "four",
+        :test_key_five => "five"
+      }
+    end
+
+    it "should transfer the argument-rest to a nested :arguments key" do
+      configuration = described_class.process @schema do
+        test_key_two "three", "four", "extra" do
+          test_key_five "five"
+        end
+      end
+
+      configuration.test_key_two.should == {
+        :test_key_three => "three",
+        :test_key_four => "four",
+        :test_key_five => "five",
+        :arguments => [ "extra" ]
       }
     end
 
