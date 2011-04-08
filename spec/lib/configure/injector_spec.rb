@@ -6,10 +6,12 @@ describe Configure::Injector do
     @configuration_class = Class.new
     @configuration_class.send :attr_accessor, :test_key
     @configuration_class.send :attr_accessor, :another_test_key
+    @configuration_class.send :attr_accessor, :invalid_key
 
     @nested_schema = { }
     @schema = {
       :configuration_class => @configuration_class,
+      :only => [ :test_key, :another_test_key, :not_existing_key ],
       :nested => {
         :test_key => @nested_schema
       },
@@ -100,10 +102,16 @@ describe Configure::Injector do
       @injector.configuration.test_key.should == [ "one", "two" ]
     end
 
-    it "should raise a #{described_class::Error} if key can't be set" do
+    it "should raise a #{Configure::InvalidKeyError} if key is not in only-list" do
       lambda do
         @injector.put_arguments :invalid_key, [ "one" ]
-      end.should raise_error(described_class::Error)
+      end.should raise_error(Configure::InvalidKeyError)
+    end
+
+    it "should raise a #{Configure::InvalidKeyError} if key is not existing" do
+      lambda do
+        @injector.put_arguments :not_existing_key, [ "one" ]
+      end.should raise_error(Configure::InvalidKeyError)
     end
 
   end

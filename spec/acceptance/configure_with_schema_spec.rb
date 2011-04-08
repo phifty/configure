@@ -12,6 +12,8 @@ describe Configure do
       configuration_class = @configuration_class
       @schema = described_class::Schema.build do
         configuration_class configuration_class
+        only :test_key_one, :test_key_two, :test_key_three, :test_key_four, :test_key_five
+        not_nil :test_key_one
         defaults do
           test_key_one "default value"
         end
@@ -40,6 +42,14 @@ describe Configure do
       end
 
       configuration.test_key_one.should == "one"
+    end
+
+    it "should raise an #{Configure::InvalidKeyError} if key isn't included in :only list" do
+      lambda do
+        described_class.process @schema do
+          test_key_six "six"
+        end
+      end.should raise_error(Configure::InvalidKeyError)
     end
 
     it "should use the specified default values" do
