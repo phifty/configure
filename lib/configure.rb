@@ -13,7 +13,8 @@ module Configure
   # This error is thrown, if a value is nil that shouldn't be nil.
   class NilValueError < StandardError; end
 
-  def self.process(schema = { }, &block)
+  def self.process(schema = nil, &block)
+    schema ||= Schema.build { }
     process_configuration schema, &block
   end
 

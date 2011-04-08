@@ -8,11 +8,14 @@ describe Configure::Injector do
     @configuration_class.send :attr_accessor, :another_test_key
     @configuration_class.send :attr_accessor, :invalid_key
 
-    @nested_schema = { }
+    @nested_schema = {
+      :configuration_class => @configuration_class
+    }
     @schema = {
       :configuration_class => @configuration_class,
       :only => [ :test_key, :another_test_key, :not_existing_key ],
       :not_nil => :another_test_key,
+      :nested_default => @nested_schema,
       :nested => {
         :test_key => @nested_schema
       },
@@ -52,6 +55,11 @@ describe Configure::Injector do
     it "should process a new (nested) configuration" do
       Configure.should_receive(:process_configuration).with(@nested_schema, &@block).and_return(@nested_configuration)
       @injector.put_block :test_key, @arguments, &@block
+    end
+
+    it "should use the nested default if no nested schema is specified for the given key" do
+      Configure.should_receive(:process_configuration).with(@nested_schema, &@block).and_return(@nested_configuration)
+      @injector.put_block :another_test_key, @arguments, &@block
     end
 
     it "should nest the configuration" do

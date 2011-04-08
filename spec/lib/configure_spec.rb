@@ -9,7 +9,13 @@ describe Configure do
   describe "#process" do
 
     before :each do
-      described_class.stub(:process_configuration)
+      described_class::Schema.stub :build => :schema
+      described_class.stub :process_configuration => nil
+    end
+
+    it "should build an empty schema if none given" do
+      described_class::Schema.should_receive(:build).and_return(:schema)
+      described_class.process nil, &@block
     end
 
     it "should call :process_configuration" do

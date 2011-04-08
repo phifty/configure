@@ -10,7 +10,7 @@ class Configure::Injector
   end
 
   def configuration_class
-    @schema[:configuration_class] || Hash
+    @schema[:configuration_class]
   end
 
   def defaults
@@ -18,7 +18,7 @@ class Configure::Injector
   end
 
   def put_block(key, arguments, &block)
-    nested_schema = (self.schema[:nested] || { })[key] || { }
+    nested_schema = (self.schema[:nested] || { })[key] || self.schema[:nested_default] || Configure::Schema.build { }
     nested_configuration = Configure.process_configuration nested_schema, &block
     Arguments.new(nested_schema, nested_configuration, arguments).put
     Configure::Checker.new(nested_schema, nested_configuration).check!

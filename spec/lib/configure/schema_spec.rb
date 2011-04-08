@@ -6,7 +6,7 @@ describe Configure::Schema do
 
     before :each do
       @block = Proc.new { }
-      Configure.stub(:process)
+      Configure.stub :process => nil
     end
 
     it "should use configure to build the schema hash" do
