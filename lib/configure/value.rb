@@ -15,7 +15,8 @@ class Configure::Value
   end
 
   def put_or_combine(value)
-    self.put get.nil? ? value : [ get, value ].flatten
+    existing_value = get
+    self.put existing_value.nil? ? value : [ existing_value, value ].flatten
   end
 
   def put_unless_existing(value)

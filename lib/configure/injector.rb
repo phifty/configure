@@ -18,10 +18,9 @@ class Configure::Injector
   end
 
   def put_block(key, arguments, &block)
-    nested_schema = (self.schema[:nested] || { })[key] || self.schema[:nested_default] || Configure::Schema.build { }
+    nested_schema = (@schema[:nested] || { })[key] || @schema[:nested_default] || Configure::Schema.build { }
     nested_configuration = Configure.process_configuration nested_schema, &block
     Arguments.new(nested_schema, nested_configuration, arguments).put
-    Configure::Checker.new(nested_schema, nested_configuration).check!
     value = Configure::Value.new @schema, @configuration, key
     value.put_or_combine nested_configuration
   end
@@ -55,7 +54,10 @@ class Configure::Injector
     def put
       put_to_specified_keys
       put_to_argument_key
+      check_values!
     end
+
+    private
 
     def put_to_specified_keys
       return if @arguments.empty?
@@ -70,6 +72,10 @@ class Configure::Injector
       return if @arguments.empty?
       arguments_value = Configure::Value.new @schema, @configuration, :arguments
       arguments_value.put @arguments
+    end
+
+    def check_values!
+      Configure::Checker.new(@schema, @configuration).check!
     end
 
   end
