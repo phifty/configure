@@ -21,12 +21,13 @@ class Configure::Injector
     nested_schema = (self.schema[:nested] || { })[key] || { }
     nested_configuration = Configure.process_configuration nested_schema, &block
     Arguments.new(nested_schema, nested_configuration, arguments).put
-    value = Value.new @schema, @configuration, key
+    Configure::Checker.new(nested_schema, nested_configuration).check!
+    value = Configure::Value.new @schema, @configuration, key
     value.put_or_combine nested_configuration
   end
 
   def put_arguments(key, arguments)
-    value = Value.new @schema, @configuration, key
+    value = Configure::Value.new @schema, @configuration, key
     value.put_single_or_multiple arguments
   end
 
@@ -39,8 +40,8 @@ class Configure::Injector
 
   def apply_defaults
     self.defaults.each do |key, default_value|
-      value = Value.new @schema, @configuration, key
-      value.put_if_nil default_value
+      value = Configure::Value.new @schema, @configuration, key
+      value.put_unless_existing default_value
     end
   end
 
@@ -60,66 +61,15 @@ class Configure::Injector
       return if @arguments.empty?
       argument_keys = [ @schema[:argument_keys] ].flatten.compact
       argument_keys.each do |argument_key|
-        arguments_value = Value.new @schema, @configuration, argument_key
+        arguments_value = Configure::Value.new @schema, @configuration, argument_key
         arguments_value.put @arguments.shift
       end
     end
 
     def put_to_argument_key
       return if @arguments.empty?
-      arguments_value = Value.new @schema, @configuration, :arguments
+      arguments_value = Configure::Value.new @schema, @configuration, :arguments
       arguments_value.put @arguments
-    end
-
-  end
-
-  # Injector for a single configuration value.
-  class Value
-
-    def initialize(schema, configuration, key)
-      @schema, @configuration, @key = schema, configuration, key
-    end
-
-    def put_single_or_multiple(values)
-      self.put_or_combine values.size == 1 ? values.first : values
-    end
-
-    def put_or_combine(value)
-      self.put exists? ? [ get, value ].flatten : value
-    end
-
-    def put_if_nil(value)
-      self.put value if get.nil?
-    end
-
-    def put(value)
-      method_name = :"#{@key}="
-      if @schema.has_key?(:only) && ![ @schema[:only] ].flatten.include?(@key)
-        raise Configure::InvalidKeyError, "access to set configuration value for key #{@key} denied!"
-      elsif @configuration.respond_to?(method_name)
-        @configuration.send method_name, value
-      elsif @configuration.respond_to?(:[]=)
-        @configuration[@key] = value
-      else
-        raise Configure::InvalidKeyError, "couldn't set configuration value for key #{@key}!"
-      end
-    end
-
-    def get
-      method_name = :"#{@key}"
-      if @schema.has_key?(:only) && ![ @schema[:only] ].flatten.include?(@key)
-        raise Configure::InvalidKeyError, "access to set configuration value for key #{@key} denied!"
-      elsif @configuration.respond_to?(method_name)
-        @configuration.send method_name
-      elsif @configuration.respond_to?(:[])
-        @configuration[@key]
-      else
-        raise Configure::InvalidKeyError, "couldn't get configuration value for key #{@key}!"
-      end
-    end
-
-    def exists?
-      !!self.get
     end
 
   end

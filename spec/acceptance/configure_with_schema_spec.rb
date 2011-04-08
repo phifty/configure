@@ -14,17 +14,17 @@ describe Configure do
         configuration_class configuration_class
         only :test_key_one, :test_key_two, :test_key_three, :test_key_four, :test_key_five
         not_nil :test_key_one
-        defaults do
+        defaults {
           test_key_one "default value"
-        end
-        nested do
-          test_key_two do
+        }
+        nested {
+          test_key_two {
             argument_keys :test_key_three, :test_key_four
-            defaults do
+            defaults {
               test_key_five "default value"
-            end
-          end
-        end
+            }
+          }
+        }
       end
     end
 
@@ -50,6 +50,15 @@ describe Configure do
           test_key_six "six"
         end
       end.should raise_error(Configure::InvalidKeyError)
+    end
+
+    it "should raise an #{Configure::NilValueError} if a not-nil value is nil" do
+      @configuration_class.send(:define_method, :has_key?) { |key| key == :test_key_one }
+      lambda do
+        described_class.process @schema do
+          test_key_one nil
+        end
+      end.should raise_error(Configure::NilValueError)
     end
 
     it "should use the specified default values" do

@@ -27,6 +27,9 @@ describe Configure do
 
       @sandbox = mock described_class::Sandbox, :instance_eval => nil
       described_class::Sandbox.stub :new => @sandbox
+
+      @checker = mock described_class::Checker, :check! => nil
+      described_class::Checker.stub :new => @checker
     end
 
     it "should initialize the injector" do
@@ -41,6 +44,16 @@ describe Configure do
 
     it "should evaluate the block in the sandbox" do
       @sandbox.should_receive(:instance_eval).with(&@block)
+      described_class.process_configuration :schema, &@block
+    end
+
+    it "should initialize the checker" do
+      described_class::Checker.should_receive(:new).with(:schema, :configuration).and_return(@checker)
+      described_class.process_configuration :schema, &@block
+    end
+
+    it "should check the configuration values" do
+      @checker.should_receive(:check!)
       described_class.process_configuration :schema, &@block
     end
 

@@ -77,6 +77,16 @@ describe Configure do
       }
     end
 
+    it "should take nil values" do
+      configuration = described_class.process do
+        test_key nil
+      end
+
+      configuration.should == {
+        :test_key => nil
+      }
+    end
+
   end
 
 end

@@ -12,6 +12,7 @@ describe Configure::Injector do
     @schema = {
       :configuration_class => @configuration_class,
       :only => [ :test_key, :another_test_key, :not_existing_key ],
+      :not_nil => :another_test_key,
       :nested => {
         :test_key => @nested_schema
       },
@@ -42,7 +43,10 @@ describe Configure::Injector do
       @block = Proc.new { }
       @arguments = [ "one" ]
       @nested_configuration = { }
-      Configure.stub(:process_configuration => @nested_configuration)
+      Configure.stub :process_configuration => @nested_configuration
+
+      @checker = mock Configure::Checker, :check! => nil
+      Configure::Checker.stub :new => @checker
     end
 
     it "should process a new (nested) configuration" do
@@ -69,6 +73,16 @@ describe Configure::Injector do
       @injector.schema[:nested][:test_key][:argument_keys] = :another_test_key
       @injector.put_block :test_key, @arguments, &@block
       @injector.configuration.test_key[:another_test_key].should == "one"
+    end
+
+    it "should initialize the checker" do
+      Configure::Checker.should_receive(:new).with(@nested_schema, @nested_configuration).and_return(@checker)
+      @injector.put_block :test_key, @arguments, &@block
+    end
+
+    it "should check the nested configuration values" do
+      @checker.should_receive(:check!)
+      @injector.put_block :test_key, @arguments, &@block
     end
 
     it "should combine nested configurations to an array" do

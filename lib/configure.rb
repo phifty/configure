@@ -1,9 +1,11 @@
 
 module Configure
 
+  autoload :Checker, File.join(File.dirname(__FILE__), "configure", "checker")
   autoload :Injector, File.join(File.dirname(__FILE__), "configure", "injector")
   autoload :Sandbox, File.join(File.dirname(__FILE__), "configure", "sandbox")
   autoload :Schema, File.join(File.dirname(__FILE__), "configure", "schema")
+  autoload :Value, File.join(File.dirname(__FILE__), "configure", "value")
 
   # This error is thrown, if a key can't be set or get.
   class InvalidKeyError < StandardError; end
@@ -17,9 +19,10 @@ module Configure
 
   def self.process_configuration(schema = { }, &block)
     injector = Injector.new schema
-    sandbox = Sandbox.new injector
-    sandbox.instance_eval &block
-    injector.configuration
+    Sandbox.new(injector).instance_eval &block
+    configuration = injector.configuration
+    Checker.new(schema, configuration).check!
+    configuration
   end
 
 end
