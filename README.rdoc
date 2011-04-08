@@ -131,7 +131,7 @@ configuration, are stored to these keys. The rest will be assigned to the <tt>:a
     }
   } # => true
 
-The :nested_default attribute can be used to define a default schema for all nested blocks.
+The <tt>:nested_default</tt> attribute can be used to define a default schema for all nested blocks.
 
 === Configuration class
 
@@ -169,9 +169,9 @@ is raised.
     invalid_key "value"
   } # => raises Configure::InvalidKeyError
 
-=== The Only-list
+=== The Only list
 
-If the :only attribute is defined in a schema, only the values of the given keys are allowed to be set.
+If the <tt>:only</tt> attribute is defined in a schema, only the values of the given keys are allowed to be set.
 
   schema = Configure::Schema.build {
     only :duration
@@ -183,8 +183,8 @@ If the :only attribute is defined in a schema, only the values of the given keys
 
 === The Not-Nil list
 
-If the :not_nil attribute is defined in a schema, an error will be raised if one of the values of the given keys
-remains nil.
+If the <tt>:not_nil</tt> attribute is defined in a schema, an error will be raised if one of the values of the given
+keys remains <tt>nil</tt>.
 
   schema = Configure::Schema.build {
     only :wave_length, :duration
