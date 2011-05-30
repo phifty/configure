@@ -4,6 +4,8 @@
 Configure offers an easy way for configure your application using a DSL. It provides a single-method interface that
 receives a block and returns well-structured configuration values.
 
+http://travis-ci.org/phifty/configure.png
+
 == Usage
 
 The most simple way <tt>configure</tt> can be used is to pass a block to the <tt>Configure.process</tt> method and
